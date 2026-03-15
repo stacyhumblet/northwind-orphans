@@ -758,11 +758,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       allActuals = (actualsResult.data || []).filter(r => r['Resource Name'] && r['Resource Name'].trim());
 
-      const fields = initResult.meta.fields || [];
-      const jiraField = fields.find(h =>
-        /jira\s*key/i.test(h) || h.replace(/^\uFEFF/,'').toLowerCase() === 'key' ||
-        h.replace(/^\uFEFF/,'').toLowerCase() === 'jira key' || /\bkey\b/i.test(h)
-      ) || fields[0];
+      const firstInitRow = (initResult.data || []).find(r => Object.keys(r).length > 0);
+      const fields = firstInitRow ? Object.keys(firstInitRow) : (initResult.meta.fields || []);
+      const jiraField = fields.find(h => {
+        const clean = h.replace(/^\uFEFF/,'').trim();
+        return /jira\s*key/i.test(clean) || clean.toLowerCase() === 'key';
+      }) || fields[0];
       const initiativeKeys = [];
       (initResult.data || []).forEach(row => {
         const key = (row[jiraField] || '').trim();
