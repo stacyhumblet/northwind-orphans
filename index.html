@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orphan % Dashboard</title>
+  <style>
+    /* Prevent flash before theme is applied */
+    html { background: #000; }
+    html[data-theme="light"] { background: #f5f7ff; }
+
+    :root {
+      --bg:   #0b1020;
+      --text: #e7ecff;
+      --muted:#a7b1d6;
+      --line: rgba(255,255,255,.08);
+      --btn:  #2d6bff;
+      --btn2: #224fc2;
+      --good: #1fe3a5;
+      --warn: #ffcc66;
+      --bad:  #ff6b6b;
+    }
+    [data-theme="light"] {
+      --bg:   #f0f4ff;
+      --text: #1a2142;
+      --muted:#5c6690;
+      --line: rgba(0,0,0,.10);
+      --btn:  #2d6bff;
+      --btn2: #224fc2;
+      --good: #0ba676;
+      --warn: #b87d00;
+      --bad:  #d93636;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+                   "Apple Color Emoji", "Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 700px at 20% 0%,  rgba(45,107,255,.22), transparent 60%),
+        radial-gradient(900px  600px at 80% 10%, rgba(31,227,165,.15), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    [data-theme="light"] body, html[data-theme="light"] body {
+      background:
+        radial-gradient(1200px 700px at 20% 0%,  rgba(45,107,255,.09), transparent 60%),
+        radial-gradient(900px  600px at 80% 10%, rgba(31,227,165,.07), transparent 60%),
+        var(--bg);
+    }
+    [data-theme="light"] .topbar {
+      background: rgba(255,255,255,.82);
+      border-bottom-color: rgba(0,0,0,.08);
+    }
+    [data-theme="light"] .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.80));
+      box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    }
+    [data-theme="light"] .meta-pill,
+    [data-theme="light"] .mgr-row,
+    [data-theme="light"] .link-btn {
+      background: rgba(255,255,255,.70);
+    }
+    [data-theme="light"] .mgr-row-bar-track { background: rgba(0,0,0,.08); }
+    [data-theme="light"] select {
+      background-color: rgba(255,255,255,.90);
+      color: var(--text);
+    }
+    [data-theme="light"] .modal-panel {
+      background: rgba(240,244,255,.98);
+    }
+    [data-theme="light"] .loading {
+      background: rgba(240,244,255,.95);
+    }
+    [data-theme="light"] .footer {
+      background: rgba(255,255,255,.50);
+    }
+    [data-theme="light"] .gauge-track { stroke: rgba(0,0,0,.10); }
+    [data-theme="light"] .gauge-center-pct { fill: var(--text); }
+    [data-theme="light"] th { color: var(--muted); }
+    [data-theme="light"] tbody tr:hover { background: rgba(0,0,0,.03); }
+
+    /* ===== Top bar ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand-title    { font-size: 18px; font-weight: 800; letter-spacing: .2px; }
+    .brand-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .topbar-right   { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    .link-btn {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      padding: 9px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .link-btn:hover { background: rgba(255,255,255,.08); }
+
+    .primary-btn {
+      border: 0;
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color: white;
+      padding: 9px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .primary-btn:hover  { filter: brightness(1.08); }
+    .primary-btn:active { transform: translateY(1px); }
+    .primary-btn:disabled { opacity: .55; cursor: default; }
+
+    /* ===== Layout ===== */
+    .container {
+      width: min(1260px, calc(100% - 40px));
+      margin: 18px auto 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.24);
+    }
+    .card-title    { font-weight: 800; font-size: 15px; }
+    .card-subtitle { margin-top: 5px; color: var(--muted); font-size: 12px; }
+
+    /* ===== Meta row ===== */
+    .meta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .meta-pill {
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+    .meta-label { color: var(--muted); font-size: 12px; }
+    .meta-value { font-weight: 800; font-size: 12px; }
+
+    /* ===== Top row: Filters (left) + KPI (right) ===== */
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 860px) { .top-row { grid-template-columns: 1fr; } }
+
+    /* ===== Filters ===== */
+    .filters .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (max-width: 980px) { .filters .grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width: 520px) { .filters .grid { grid-template-columns: 1fr; } }
+
+    .field label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 5px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+    select {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a7b1d6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+    select:focus { border-color: var(--btn); }
+
+    /* ===== Orphan stats card (gauge left, compact stats right) ===== */
+    .orphan-stats-card { padding: 20px; }
+    .orphan-stats-inner {
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    .orphan-gauge-col {
+      display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+    }
+    .kpi-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+    .kpi-sub   { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.4; text-align: center; max-width: 120px; }
+
+    /* Compact stats beside gauge */
+    .compact-stats { flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 4px; }
+    .compact-stat  { display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+                     padding: 7px 0; border-bottom: 1px solid var(--line); }
+    .compact-stat:last-child { border-bottom: none; }
+    .compact-stat-label { color: var(--muted); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .compact-stat-value { font-size: 17px; font-weight: 900; letter-spacing: -.3px; }
+
+    /* Threshold-based glow */
+    .orphan-stats-card.good { border-color: rgba(31,227,165,.40); box-shadow: 0 14px 30px rgba(31,227,165,.13); }
+    .orphan-stats-card.warn { border-color: rgba(255,204,102,.40); box-shadow: 0 14px 30px rgba(255,204,102,.10); }
+    .orphan-stats-card.bad  { border-color: rgba(255,107,107,.40); box-shadow: 0 14px 30px rgba(255,107,107,.10); }
+
+    /* ===== Orphan % Gauge ===== */
+    .kpi-gauge-wrap { display: flex; justify-content: center; margin: 4px 0 2px; }
+    .orphan-gauge   { width: 120px; height: 120px; }
+    .gauge-track    { stroke: rgba(255,255,255,.10); }
+    .gauge-fill     { stroke: var(--good); transition: stroke-dasharray 0.7s ease, stroke 0.4s ease; }
+    .gauge-tick     { stroke: rgba(255,255,255,.55); }
+    .gauge-center-pct {
+      font-size: 22px; font-weight: 900; fill: var(--text);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* ===== Table ===== */
+    .table-wrap { overflow: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      text-align: left;
+    }
+    th { color: var(--muted); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+    td.num, th.num { text-align: right; }
+    tbody tr:hover { background: rgba(255,255,255,.04); }
+    a.jira, button.jira { color: #90bfff; text-decoration: none; font-weight: 700; }
+    a.jira:hover, button.jira:hover { text-decoration: underline; color: #b8d4ff; }
+    button.jira { background: none; border: none; padding: 0; font-size: 13px; font-family: inherit; cursor: pointer; text-align: left; }
+
+    /* ===== Footer ===== */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      background: rgba(0,0,0,.12);
+      flex-wrap: wrap;
+    }
+    .heart { filter: drop-shadow(0 4px 8px rgba(255,107,107,.4)); }
+
+    /* ===== Modals ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 5000;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-panel {
+      width: min(560px, calc(100% - 32px));
+      background: rgba(11,16,32,.97); border: 1px solid var(--line);
+      border-radius: 20px; padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    }
+    .modal-title { font-size: 16px; font-weight: 800; }
+    .modal-close {
+      border: 0; background: rgba(255,255,255,.08); color: var(--text);
+      width: 30px; height: 30px; border-radius: 8px; font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      line-height: 1;
+    }
+    .modal-close:hover { background: rgba(255,255,255,.15); }
+
+    /* ===== Loading Screen ===== */
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      overflow: hidden;
+      background: rgba(11,16,32,.94);
+      transition: opacity .5s;
+    }
+    .loading.fade-out { opacity: 0; pointer-events: none; }
+
+    .loading-bg {
+      position: absolute;
+      inset: 0;
+    }
+    .loading-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.06);
+      filter: blur(3px) brightness(0.45) saturate(1.15);
+    }
+    .loading-bg-placeholder {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(45,107,255,.35), transparent 55%),
+                  radial-gradient(ellipse at 75% 75%, rgba(31,227,165,.25), transparent 55%),
+                  var(--bg);
+    }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(900px 500px at 50% 35%, rgba(45,107,255,.20), transparent 60%),
+        radial-gradient(700px 450px at 50% 60%, rgba(31,227,165,.13), transparent 60%);
+    }
+
+    .loading-panel {
+      width: min(680px, calc(100% - 32px));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 28px 28px;
+      background: rgba(0,0,0,.40);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      text-align: left;
+    }
+    .loading-logo       { font-size: 36px; margin-bottom: 10px; }
+    .loading-title      { font-weight: 900; font-size: 22px; letter-spacing: .2px; }
+    .loading-subtitle   { color: var(--muted); margin-top: 8px; font-size: 14px; line-height: 1.45; }
+    .loading-hint       { color: rgba(167,177,214,.65); margin-top: 14px; font-size: 11px; line-height: 1.5; }
+
+    .loading-spinner-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2.5px solid rgba(45,107,255,.25);
+      border-top-color: var(--btn);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-step { font-size: 13px; color: var(--text); font-weight: 600; }
+
+    /* ===== Manager Leaderboard ===== */
+    .mgr-controls {
+      display: flex; align-items: center; gap: 14px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .mgr-toggle { display: flex; gap: 6px; }
+    .mgr-toggle-btn {
+      border: 1px solid var(--line); background: rgba(255,255,255,.04);
+      color: var(--muted); padding: 6px 14px; border-radius: 10px;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s;
+    }
+    .mgr-toggle-btn.active  { background: var(--btn); border-color: var(--btn); color: white; }
+    .mgr-toggle-btn:hover:not(.active) { background: rgba(255,255,255,.08); color: var(--text); }
+
+    .mgr-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; font-size: 12px; }
+    .mgr-crumb-sep    { color: var(--muted); padding: 0 2px; }
+    .mgr-crumb-active { color: var(--text); font-weight: 700; }
+    .mgr-crumb-link   { color: var(--btn); cursor: pointer; font-weight: 600; text-decoration: none; }
+    .mgr-crumb-link:hover { text-decoration: underline; }
+
+    .mgr-rows { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+
+    .mgr-row {
+      background: rgba(255,255,255,.03); border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .mgr-row-clickable { cursor: pointer; }
+    .mgr-row-clickable:hover { background: rgba(255,255,255,.06); border-color: rgba(45,107,255,.35); }
+
+    .mgr-row-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .mgr-row-name   { font-size: 13px; font-weight: 700; color: var(--text); }
+    .mgr-row-value  { font-size: 14px; font-weight: 900; }
+
+    .mgr-row-bar-track {
+      height: 6px; background: rgba(255,255,255,.08); border-radius: 3px;
+      position: relative; overflow: visible;
+    }
+    .mgr-row-bar-fill {
+      height: 100%; border-radius: 3px; transition: width 0.5s ease; min-width: 2px;
+    }
+    .mgr-row-bar-threshold {
+      position: absolute; top: -3px; bottom: -3px; width: 2px;
+      background: rgba(255,255,255,.6); border-radius: 1px;
+    }
+    .mgr-row-meta { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    /* ===== Manager Detail Panel ===== */
+    .mgr-detail-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 14px; flex-wrap: wrap; margin-bottom: 4px;
+    }
+    .mgr-detail-tabs { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* ===== Confetti ===== */
+    #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 500; }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+
+    /* ===== Trend chart ===== */
+    .trend-svg-wrap { margin: 16px 0 4px; }
+    .trend-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
+    .trend-table th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .3px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    .trend-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .trend-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .trend-table tfoot td { font-weight: 700; color: var(--muted); font-size: 10px; padding: 8px 8px 2px; }
+    .caveat-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .caveat-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+    .caveat-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .caveat-text strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 2px; }
+    .caveat-text span  { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading screen ───────────────────────────────────────────────────────── -->
+<div id="loading" class="loading">
+  <div class="loading-bg">
+    <img id="loadingBgImg" src="" alt="" style="display:none">
+    <div class="loading-bg-placeholder" id="loadingBgPlaceholder"></div>
+  </div>
+  <div class="loading-overlay">
+    <div class="loading-panel">
+      <div class="loading-logo">📊</div>
+      <div class="loading-title">Orphan % Dashboard</div>
+      <div class="loading-subtitle">
+        Crunching hours, slicing by management level, and surfacing orphan drivers…
+      </div>
+      <div class="loading-spinner-wrap">
+        <div class="loading-spinner"></div>
+        <span id="loadingStep" class="loading-step">Initializing…</span>
+      </div>
+      <div class="loading-hint">
+        This pulls live data from the source sheet — usually ready in 10–30 seconds.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confetti canvas ──────────────────────────────────────────────────────── -->
+<canvas id="confettiCanvas"></canvas>
+
+<!-- ── Caveats modal ─────────────────────────────────────────────────────── -->
+<div id="caveatsModal" class="modal-overlay" style="display:none" onclick="closeModalOnOverlay(event,'caveats')">
+  <div class="modal-panel" style="width:min(620px,calc(100% - 32px))">
+    <div class="modal-header">
+      <div class="modal-title">📊 Data Caveats &amp; Nuances</div>
+      <button class="modal-close" onclick="closeModal('caveats')">✕</button>
+    </div>
+    <ul class="caveat-list">
+      <li class="caveat-item">
+        <span class="caveat-icon">⏱</span>
+        <div class="caveat-text">
+          <strong>Hours are worklog-based</strong>
+          <span>This dashboard reflects time logged in JIRA worklogs. Unlogged work or entries back-dated outside the filter window will not appear.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">✏️</span>
+        <div class="caveat-text">
+          <strong>Roadmap Mapping is a manual field</strong>
+          <span>Orphan status is determined by whether the "Roadmap Mapping" field on a worklog row matches a known JIRA Initiative Key. Typos, abbreviations, or missing entries cause false orphans — these are data quality issues, not necessarily unplanned work.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">📐</span>
+        <div class="caveat-text">
+          <strong>Orphan % is row-level, not issue-level</strong>
+          <span>A single issue logged across multiple people/weeks counts as multiple rows. Orphan % reflects share of hours, not unique JIRA issues.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">🔄</span>
+        <div class="caveat-text">
+          <strong>Data refreshes once weekly</strong>
+          <span>The Actuals sheet refreshes midday Wednesday. Edits made after the Wednesday pull won't appear until the following week's refresh.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">🏛</span>
+        <div class="caveat-text">
+          <strong>Initiative list is the source of truth</strong>
+          <span>The Initiative tab (JIRA Key column) defines what is considered "linked." If a valid initiative is missing from that tab, hours against it will appear orphaned.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">🏢</span>
+        <div class="caveat-text">
+          <strong>Org hierarchy completeness varies</strong>
+          <span>L6 and Direct Manager fields may be blank for some resources depending on how the org is structured in the source system. Blank managers are grouped separately.</span>
+        </div>
+      </li>
+      <li class="caveat-item">
+        <span class="caveat-icon">💡</span>
+        <div class="caveat-text">
+          <strong>Goal is directional, not a hard SLA</strong>
+          <span>The 5% threshold is a PMO hygiene target. Bursts above 5% during roadmap re-planning or org changes are expected; sustained overages warrant clean-up.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- ── Trend modal ───────────────────────────────────────────────────────── -->
+<div id="trendModal" class="modal-overlay" style="display:none" onclick="closeModalOnOverlay(event,'trend')">
+  <div class="modal-panel" style="width:min(640px,calc(100% - 32px))">
+    <div class="modal-header">
+      <div class="modal-title">📈 Historical Orphan % — Quarter over Quarter</div>
+      <button class="modal-close" onclick="closeModal('trend')">✕</button>
+    </div>
+    <div id="trendModalBody">
+      <div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Loading historical data…</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Jira modal (same pattern as Caveats / Trend) ──────────────────────── -->
+<div id="jiraModal" class="modal-overlay" style="display:none" onclick="closeModalOnOverlay(event,'jira')">
+  <div class="modal-panel" style="width:min(420px,calc(100% - 32px));text-align:center;padding-bottom:28px;">
+    <div class="modal-header">
+      <div class="modal-title">🔗 Jira Link</div>
+      <button class="modal-close" onclick="closeModal('jira')">✕</button>
+    </div>
+    <div style="padding:20px 24px 0;">
+      <div style="font-size:36px;margin-bottom:10px;">🔗</div>
+      <div id="jiraModalKey" style="font-size:15px;font-weight:700;color:#90bfff;margin-bottom:12px;"></div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;">
+        In a connected environment, this would open directly in Jira.
+      </div>
+      <button class="modal-close" onclick="closeModal('jira')"
+        style="width:auto;height:auto;position:static;font-size:13px;font-weight:700;
+               background:var(--btn);color:#fff;border-radius:10px;padding:10px 28px;border:none;cursor:pointer;">
+        Got it
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Top bar ──────────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand">
+      <div class="brand-title">Orphan % Dashboard</div>
+      <div class="brand-subtitle">PMO visibility into orphan drivers across management &amp; work hierarchy</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="link-btn" onclick="openModal('caveats')">📊 Caveats</button>
+    <button class="link-btn" onclick="openTrendModal()">📈 Trend</button>
+    <a class="link-btn" href="https://script.google.com/macros/s/AKfycbzmxbELF_fqfGEtLq-C0a_Xo4zO2xO82GTBOorwPw9wxQUx8ZF0guwcwSCdOfHqNYJ2/exec" target="_blank">🛠️ Demo Tools</a>
+    <a class="link-btn" href="#" target="_blank">View source sheet</a>
+    <button id="themeToggleBtn" class="link-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+    <button id="refreshBtn" class="primary-btn" onclick="location.reload()">🔄 Refresh</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ── Meta row ────────────────────────────────────────────────────────────── -->
+  <section class="meta-row">
+    <div class="meta-pill">
+      <span class="meta-label">Last refreshed:</span>
+      <span id="lastRefreshed" class="meta-value">—</span>
+    </div>
+    <div class="meta-pill">
+      <span class="meta-label">Source rows:</span>
+      <span id="rowsScannedPill" class="meta-value">—</span>
+    </div>
+    <div class="meta-pill">
+      <span class="meta-label">Goal:</span>
+      <span class="meta-value" style="color:var(--good);">Under 5% Orphaned</span>
+    </div>
+    <div class="meta-pill">
+      <span class="meta-label">Lineage:</span>
+      <span class="meta-value" style="font-weight:500; font-size:11px;">Issue Key → Epic → Program → Initiative</span>
+    </div>
+    <div class="meta-pill" title="Actuals data refreshes midday Wednesday.">
+      <span class="meta-label">Auto-refresh:</span>
+      <span class="meta-value" style="font-size:11px;">Wednesdays ~7pm CT / 5pm PT</span>
+    </div>
+  </section>
+
+  <!-- ── Filters + KPI ───────────────────────────────────────────────────────── -->
+  <div class="top-row">
+
+    <!-- Filters card -->
+    <section class="filters card">
+      <div class="card-title">Filters</div>
+      <div class="grid">
+        <div class="field">
+          <label>Year</label>
+          <select id="yearSel"><option value="">(All Years)</option></select>
+        </div>
+        <div class="field">
+          <label>Month</label>
+          <select id="monthSel"><option value="">(All Months)</option></select>
+        </div>
+        <div class="field">
+          <label>L4 Manager</label>
+          <select id="l4Sel"><option value="">(All L4s)</option></select>
+        </div>
+        <div class="field">
+          <label>L5 Manager</label>
+          <select id="l5Sel"><option value="">(All L5s)</option></select>
+        </div>
+        <div class="field">
+          <label>L6 Manager</label>
+          <select id="l6Sel"><option value="">(All L6s)</option></select>
+        </div>
+        <div class="field">
+          <label>Direct Manager</label>
+          <select id="dmSel"><option value="">(All DMs)</option></select>
+        </div>
+        <div class="field" style="grid-column: span 2;">
+          <label>&nbsp;</label>
+          <button id="applyBtn" class="primary-btn" style="width:100%;">Apply Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orphan stats card -->
+    <section class="card orphan-stats-card" id="kpiOrphanPct">
+      <div class="orphan-stats-inner">
+        <div class="orphan-gauge-col">
+          <div class="kpi-label">Current Orphan %</div>
+          <div class="kpi-gauge-wrap">
+            <svg class="orphan-gauge" viewBox="0 0 128 128" aria-label="Orphan percentage gauge">
+              <circle class="gauge-track" cx="64" cy="64" r="54" fill="none" stroke-width="10"
+                      stroke-dasharray="226.19 113.10" transform="rotate(150 64 64)"/>
+              <circle class="gauge-fill" id="gaugeFill" cx="64" cy="64" r="54" fill="none" stroke-width="10"
+                      stroke-dasharray="0 339.29" transform="rotate(150 64 64)"/>
+              <text class="gauge-center-pct" id="gaugeCenterPct" x="64" y="72" text-anchor="middle">—</text>
+            </svg>
+          </div>
+          <div class="kpi-sub" id="orphanPctSub">Loading…</div>
+        </div>
+        <div class="compact-stats">
+          <div class="compact-stat">
+            <div class="compact-stat-label">Orphaned Hours</div>
+            <div class="compact-stat-value" id="orphanHours">—</div>
+          </div>
+          <div class="compact-stat">
+            <div class="compact-stat-label">Total Hours</div>
+            <div class="compact-stat-value" id="totalHours">—</div>
+          </div>
+          <div class="compact-stat">
+            <div class="compact-stat-label">Orphan Issues</div>
+            <div class="compact-stat-value" id="orphanIssueCount">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── Manager Leaderboard ─────────────────────────────────────────────────── -->
+  <section class="card" id="managerLeaderboardCard">
+    <div class="card-title">Manager Leaderboard</div>
+    <div class="card-subtitle">Orphan % by management level — click a name to drill down. Worst offenders first.</div>
+    <div class="mgr-controls">
+      <div class="mgr-toggle">
+        <button id="mgrTogglePct"   class="mgr-toggle-btn active" onclick="setViewMode('pct')">% View</button>
+        <button id="mgrToggleHours" class="mgr-toggle-btn"        onclick="setViewMode('hrs')">Hours View</button>
+      </div>
+      <div id="mgrBreadcrumb" class="mgr-breadcrumb">
+        <span class="mgr-crumb-active">All L4s</span>
+      </div>
+    </div>
+    <div id="mgrLeaderboardRows" class="mgr-rows">
+      <div style="color:var(--muted);padding:20px;text-align:center;">Loading leaderboard…</div>
+    </div>
+  </section>
+
+  <!-- ── Manager Orphan Detail ──────────────────────────────────────────────── -->
+  <section class="card" id="mgrDetailCard">
+    <div class="mgr-detail-header">
+      <div>
+        <div class="card-title" id="mgrDetailTitle">Orphan Detail — All L4s</div>
+        <div class="card-subtitle" id="mgrDetailSubtitle">Programs and epics with orphaned hours (not tied to a roadmap initiative)</div>
+      </div>
+      <div class="mgr-detail-tabs">
+        <button id="mgrDetailTabPrograms" class="mgr-toggle-btn active" onclick="setDetailMode('programs')">Programs</button>
+        <button id="mgrDetailTabEpics"    class="mgr-toggle-btn"        onclick="setDetailMode('epics')">Epics</button>
+      </div>
+    </div>
+    <div id="mgrDetailContent" class="table-wrap" style="margin-top:12px;"></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-left">Made with <span class="heart">❤️</span> by your Planning &amp; Portfolio team</div>
+  <div class="footer-right">Questions? Ping us in Slack: <strong>#portfolio-tools-support</strong></div>
+</footer>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────────
+const MONTHS_ABBR  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DRILL_LEVELS = ['Level 4 Mgr','Level 5 Mgr','Level 6 Mgr','Direct Manager'];
+const DRILL_LABELS = ['L4','L5','L6','DM'];
+
+// Gauge geometry: 240-degree arc on r=54 circle
+const ARC_LEN   = 226.19;  // 2π × 54 × (240/360)
+const FULL_CIRC = 339.29;  // 2π × 54
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let allActuals = [];
+let initKeySet = new Set();
+let filtered   = [];
+let viewMode   = 'pct';       // 'pct' | 'hrs'
+let detailMode = 'programs';  // 'programs' | 'epics'
+let drillPath  = [];          // [{level, name}, …]
+
+// ── Data sources ───────────────────────────────────────────────────────────────
+const SHEET_ID    = '1j165dsa1a-DDapOCgyBLrJQ_UBa4LzCWdWez4_obLD0';
+const ACTUALS_CSV = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&sheet=Actuals_DummyData';
+const INIT_CSV    = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&sheet=Initiative_DummyData';
+const HIST_CSV    = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&sheet=Historical_Orphans';
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('applyBtn').addEventListener('click', applyFilters);
+
+  document.getElementById('loadingStep').textContent = 'Fetching data…';
+
+  let actualsLoaded = false, initLoaded = false;
+  let actualsResult = null, initResult = null;
+
+  function tryBuild() {
+    if (!actualsLoaded || !initLoaded) return;
+    try {
+      allActuals = (actualsResult.data || []).filter(r => r['Resource Name'] && r['Resource Name'].trim());
+
+      const jiraField = (initResult.meta.fields || []).find(h =>
+        /jira\s*key/i.test(h) || h.toLowerCase() === 'key' || h.toLowerCase() === 'jira key'
+      );
+      const initiativeKeys = [];
+      (initResult.data || []).forEach(row => {
+        const key = (row[jiraField] || '').trim();
+        if (key) initiativeKeys.push(key);
+      });
+      initKeySet = new Set(initiativeKeys);
+
+      document.getElementById('loadingStep').textContent = 'Building leaderboard…';
+      document.getElementById('rowsScannedPill').textContent = allActuals.length.toLocaleString();
+      document.getElementById('lastRefreshed').textContent =
+        new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+      populateFilterDropdowns();
+      applyFilters();
+
+      const totalHrs   = allActuals.reduce((s,r) => s + hrs(r), 0);
+      const orphanHrs  = allActuals.filter(isOrphaned).reduce((s,r) => s + hrs(r), 0);
+      const overallPct = totalHrs > 0 ? orphanHrs / totalHrs : 1;
+
+      const loading = document.getElementById('loading');
+      loading.classList.add('fade-out');
+      setTimeout(() => {
+        loading.style.display = 'none';
+        if (overallPct < 0.05) launchConfetti();
+      }, 500);
+    } catch(e) {
+      showLoadError(e.message || String(e));
+    }
+  }
+
+  Papa.parse(ACTUALS_CSV, {
+    download: true, header: true,
+    complete: r => { actualsResult = r; actualsLoaded = true; tryBuild(); },
+    error:    e => showLoadError(String(e))
+  });
+
+  Papa.parse(INIT_CSV, {
+    download: true, header: true,
+    complete: r => { initResult = r; initLoaded = true; tryBuild(); },
+    error:    e => showLoadError(String(e))
+  });
+});
+
+function showLoadError(msg) {
+  document.getElementById('loading').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:24px;">
+      <div style="max-width:500px;text-align:center;font-family:sans-serif;">
+        <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+        <div style="font-weight:900;font-size:18px;color:#ff6b6b;margin-bottom:8px;">Failed to load data</div>
+        <p style="font-size:13px;color:#a7b1d6;margin-bottom:12px;line-height:1.5;">
+          Make sure the Google Sheet is shared as "Anyone with the link can view."
+        </p>
+        <pre style="font-size:11px;text-align:left;background:rgba(0,0,0,.4);padding:10px;
+                    border-radius:8px;overflow:auto;color:#e7ecff;">${msg}</pre>
+        <button onclick="location.reload()"
+          style="margin-top:16px;border:0;background:linear-gradient(180deg,#2d6bff,#224fc2);
+                 color:white;padding:10px 18px;border-radius:12px;font-weight:700;
+                 font-size:13px;cursor:pointer;">🔄 Reload page</button>
+      </div>
+    </div>`;
+}
+
+// ── Orphan detection ───────────────────────────────────────────────────────────
+function isOrphaned(row) {
+  const mapping = (row['Roadmap Mapping'] || '').trim();
+  return !mapping || !initKeySet.has(mapping);
+}
+
+// ── Filter dropdowns ───────────────────────────────────────────────────────────
+function populateFilterDropdowns() {
+  const years  = new Set();
+  const months = new Set();
+  const l4s    = new Set();
+  const l5s    = new Set();
+  const l6s    = new Set();
+  const dms    = new Set();
+
+  allActuals.forEach(r => {
+    if (r['Year of Worklog'])  years.add(r['Year of Worklog']);
+    if (r['Month of Worklog']) months.add(r['Month of Worklog']);
+    if (r['Level 4 Mgr'])     l4s.add(r['Level 4 Mgr']);
+    if (r['Level 5 Mgr'])     l5s.add(r['Level 5 Mgr']);
+    if (r['Level 6 Mgr'])     l6s.add(r['Level 6 Mgr']);
+    if (r['Direct Manager'])  dms.add(r['Direct Manager']);
+  });
+
+  addOptions('yearSel',  [...years].sort().reverse());
+  addOptions('monthSel', [...months].sort((a,b) =>
+    MONTHS_ABBR.indexOf(a.slice(0,3)) - MONTHS_ABBR.indexOf(b.slice(0,3))));
+  addOptions('l4Sel', [...l4s].sort());
+  addOptions('l5Sel', [...l5s].sort());
+  addOptions('l6Sel', [...l6s].sort());
+  addOptions('dmSel', [...dms].sort());
+}
+
+function addOptions(id, vals) {
+  const sel = document.getElementById(id);
+  vals.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+// ── Apply filters ──────────────────────────────────────────────────────────────
+function applyFilters() {
+  const year  = document.getElementById('yearSel').value;
+  const month = document.getElementById('monthSel').value;
+  const l4    = document.getElementById('l4Sel').value;
+  const l5    = document.getElementById('l5Sel').value;
+  const l6    = document.getElementById('l6Sel').value;
+  const dm    = document.getElementById('dmSel').value;
+
+  filtered = allActuals.filter(r =>
+    (!year  || r['Year of Worklog']  === year)  &&
+    (!month || r['Month of Worklog'] === month) &&
+    (!l4    || r['Level 4 Mgr']     === l4)    &&
+    (!l5    || r['Level 5 Mgr']     === l5)    &&
+    (!l6    || r['Level 6 Mgr']     === l6)    &&
+    (!dm    || r['Direct Manager']   === dm)
+  );
+
+  drillPath = [];
+  renderAll();
+}
+
+// ── Toggle modes ───────────────────────────────────────────────────────────────
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('mgrTogglePct').classList.toggle('active',   mode === 'pct');
+  document.getElementById('mgrToggleHours').classList.toggle('active', mode === 'hrs');
+  renderLeaderboard();
+}
+
+function setDetailMode(mode) {
+  detailMode = mode;
+  document.getElementById('mgrDetailTabPrograms').classList.toggle('active', mode === 'programs');
+  document.getElementById('mgrDetailTabEpics').classList.toggle('active',    mode === 'epics');
+  renderOrphanDetail();
+}
+
+// ── Main render ────────────────────────────────────────────────────────────────
+function renderAll() {
+  updateStats(filtered);
+  renderBreadcrumb();
+  renderLeaderboard();
+  renderOrphanDetail();
+}
+
+// ── Scoped rows ────────────────────────────────────────────────────────────────
+function getScopedRows() {
+  let rows = filtered;
+  drillPath.forEach(({level, name}) => {
+    rows = rows.filter(r => r[level] === name);
+  });
+  return rows;
+}
+
+function getCurrentLevel() {
+  return DRILL_LEVELS[drillPath.length] || null;
+}
+
+// ── Stats + Gauge ──────────────────────────────────────────────────────────────
+function updateStats(rows) {
+  const total  = rows.reduce((s,r) => s + hrs(r), 0);
+  const orphan = rows.filter(isOrphaned).reduce((s,r) => s + hrs(r), 0);
+  const pct    = total > 0 ? orphan / total : 0;
+
+  document.getElementById('orphanHours').textContent      = fmt(orphan);
+  document.getElementById('totalHours').textContent       = fmt(total);
+  document.getElementById('orphanIssueCount').textContent = rows.filter(isOrphaned).length.toLocaleString();
+
+  updateGauge(pct);
+}
+
+function updateGauge(pct) {
+  const filled  = ARC_LEN * Math.min(pct, 1);
+  const fill    = document.getElementById('gaugeFill');
+  const label   = document.getElementById('gaugeCenterPct');
+  const color   = pctColor(pct);
+
+  fill.style.strokeDasharray = filled + ' ' + (FULL_CIRC - filled);
+  fill.style.stroke = color;
+  label.textContent = fmtPct(pct);
+  label.style.fill  = color;
+
+  // Sub-text
+  const sub = document.getElementById('orphanPctSub');
+  if (pct < 0.05)      sub.textContent = '✓ Under the 5% goal!';
+  else if (pct < 0.15) sub.textContent = '⚠ Above goal — 5% target not met';
+  else                 sub.textContent  = '✕ High orphan rate — action needed';
+  sub.style.color = color;
+
+  // Card glow
+  const card = document.getElementById('kpiOrphanPct');
+  card.classList.toggle('good', pct < 0.05);
+  card.classList.toggle('warn', pct >= 0.05 && pct < 0.15);
+  card.classList.toggle('bad',  pct >= 0.15);
+}
+
+// ── Leaderboard ────────────────────────────────────────────────────────────────
+function renderLeaderboard() {
+  const scopedRows = getScopedRows();
+  const level      = getCurrentLevel();
+  const container  = document.getElementById('mgrLeaderboardRows');
+
+  if (!level) {
+    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;">No further drill-down levels available.</div>';
+    return;
+  }
+
+  const agg = aggregateByField(scopedRows, level);
+
+  if (!agg.length) {
+    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;">No data in current scope.</div>';
+    return;
+  }
+
+  agg.sort((a,b) => b.orphanPct - a.orphanPct);
+
+  const maxVal = viewMode === 'pct'
+    ? Math.max(...agg.map(a => a.orphanPct), 0.001)
+    : Math.max(...agg.map(a => a.orphanHrs), 0.001);
+
+  const totalH  = agg.reduce((s,a) => s + a.totalHrs,  0);
+  const orphanH = agg.reduce((s,a) => s + a.orphanHrs, 0);
+  const avgPct  = totalH > 0 ? orphanH / totalH : 0;
+
+  const hasNextLevel = drillPath.length < DRILL_LEVELS.length;
+
+  let html = '';
+  agg.forEach(item => {
+    const barVal   = viewMode === 'pct' ? item.orphanPct : item.orphanHrs;
+    const barW     = maxVal > 0 ? (barVal / maxVal) * 100 : 0;
+    const color    = pctColor(item.orphanPct);
+    const benchPct = viewMode === 'pct' && maxVal > 0 ? (avgPct / maxVal) * 100 : 0;
+    const metaText = viewMode === 'pct'
+      ? `${fmt(item.orphanHrs)} orphan hrs of ${fmt(item.totalHrs)} total`
+      : `${fmt(item.orphanHrs)} orphan hrs`;
+    const isZero   = item.orphanHrs === 0;
+    const valText  = isZero
+      ? '<span style="color:var(--good)">✓ 0%</span>'
+      : `<span style="color:${color}">${fmtPct(item.orphanPct)}</span>`;
+
+    html += `<div class="mgr-row${hasNextLevel ? ' mgr-row-clickable' : ''}"
+                  ${hasNextLevel ? `onclick="drillInto('${esc(level)}','${esc(item.name)}')"` : ''}>
+      <div class="mgr-row-header">
+        <span class="mgr-row-name">${esc(item.name)}</span>
+        <span class="mgr-row-value">${valText}</span>
+      </div>
+      <div class="mgr-row-bar-track">
+        <div class="mgr-row-bar-fill" style="width:${barW.toFixed(1)}%;background:${color}"></div>
+        ${viewMode === 'pct' && benchPct > 0
+          ? `<div class="mgr-row-bar-threshold" style="left:${benchPct.toFixed(1)}%" title="Avg"></div>`
+          : ''}
+      </div>
+      <div class="mgr-row-meta">${metaText}${hasNextLevel ? ' — click to drill down' : ''}</div>
+    </div>`;
+
+    if (isZero) setTimeout(() => launchConfetti(), 100);
+  });
+
+  container.innerHTML = html;
+}
+
+// ── Drill-down ─────────────────────────────────────────────────────────────────
+function drillInto(level, name) {
+  if (drillPath.length < DRILL_LEVELS.length) {
+    drillPath.push({ level, name });
+    renderBreadcrumb();
+    renderLeaderboard();
+    renderOrphanDetail();
+    updateStats(getScopedRows());
+  }
+}
+
+function drillTo(index) {
+  drillPath = index < 0 ? [] : drillPath.slice(0, index + 1);
+  renderBreadcrumb();
+  renderLeaderboard();
+  renderOrphanDetail();
+  updateStats(getScopedRows());
+}
+
+// ── Breadcrumb ─────────────────────────────────────────────────────────────────
+function renderBreadcrumb() {
+  const bc = document.getElementById('mgrBreadcrumb');
+
+  if (drillPath.length === 0) {
+    bc.innerHTML = '<span class="mgr-crumb-active">All L4s</span>';
+    document.getElementById('mgrDetailTitle').textContent   = 'Orphan Detail — All L4s';
+    document.getElementById('mgrDetailSubtitle').textContent = 'Programs and epics with orphaned hours (not tied to a roadmap initiative)';
+    return;
+  }
+
+  let html = `<a class="mgr-crumb-link" href="#" onclick="drillTo(-1);return false">All L4s</a>`;
+  drillPath.forEach((step, i) => {
+    html += `<span class="mgr-crumb-sep"> › </span>`;
+    if (i === drillPath.length - 1) {
+      html += `<span class="mgr-crumb-active">${DRILL_LABELS[i]}: ${esc(step.name)}</span>`;
+    } else {
+      html += `<a class="mgr-crumb-link" href="#" onclick="drillTo(${i});return false">${DRILL_LABELS[i]}: ${esc(step.name)}</a>`;
+    }
+  });
+  bc.innerHTML = html;
+
+  const lastStep   = drillPath[drillPath.length - 1];
+  const levelLabel = DRILL_LABELS[drillPath.length - 1];
+  document.getElementById('mgrDetailTitle').textContent    = `Orphan Detail — ${levelLabel}: ${lastStep.name}`;
+  document.getElementById('mgrDetailSubtitle').textContent = 'Programs and epics with orphaned hours for this manager scope';
+}
+
+// ── Orphan Detail ──────────────────────────────────────────────────────────────
+function renderOrphanDetail() {
+  const scopedRows = getScopedRows();
+  const orphanRows = scopedRows.filter(isOrphaned);
+  const el         = document.getElementById('mgrDetailContent');
+
+  if (!orphanRows.length) {
+    el.innerHTML = `<div style="color:var(--good);text-align:center;padding:24px;font-weight:700;">
+      🎉 No orphaned hours in this scope!
+    </div>`;
+    return;
+  }
+
+  const keyFn   = detailMode === 'programs' ? r => programKey(r) : r => epicKey(r);
+  const agg     = aggregateByFn(scopedRows,  keyFn);
+  const orphAgg = aggregateByFn(orphanRows,  keyFn);
+
+  const keys = [...new Set([...Object.keys(agg), ...Object.keys(orphAgg)])];
+  const rows = keys.map(k => {
+    const totalHrs  = agg[k]     || 0;
+    const orphanHrs = orphAgg[k] || 0;
+    const orphanPct = totalHrs > 0 ? orphanHrs / totalHrs : 0;
+    return { key: k, totalHrs, orphanHrs, orphanPct };
+  }).filter(r => r.orphanHrs > 0 && r.key !== '(Unlinked)');
+
+  rows.sort((a,b) => b.orphanPct - a.orphanPct || b.orphanHrs - a.orphanHrs);
+
+  const totalOrphan = rows.reduce((s,r) => s + r.orphanHrs, 0);
+  const totalTotal  = rows.reduce((s,r) => s + r.totalHrs,  0);
+  const totalPct    = totalTotal > 0 ? totalOrphan / totalTotal : 0;
+  const colLabel    = detailMode === 'programs' ? 'Program (Live Link to Jira)' : 'Epic / Key (Live Link to Jira)';
+
+  let html = `<table>
+    <thead><tr>
+      <th>${colLabel}</th>
+      <th class="num">Orphan Hours</th>
+      <th class="num">Total Hours</th>
+      <th class="num">Orphan %</th>
+    </tr></thead>
+    <tbody>`;
+
+  rows.forEach(r => {
+    const color = pctColor(r.orphanPct);
+    html += `<tr>
+      <td class="jira-cell"></td>
+      <td class="num">${fmt(r.orphanHrs)}</td>
+      <td class="num">${fmt(r.totalHrs)}</td>
+      <td class="num" style="color:${color};font-weight:900;">${fmtPct(r.orphanPct)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody>
+    <tfoot><tr style="font-weight:800;">
+      <td>Total</td>
+      <td class="num">${fmt(totalOrphan)}</td>
+      <td class="num">${fmt(totalTotal)}</td>
+      <td class="num" style="color:${pctColor(totalPct)};font-weight:900;">${fmtPct(totalPct)}</td>
+    </tr></tfoot>
+    </table>`;
+
+  el.innerHTML = html;
+
+  // Build each clickable button directly using .onclick property
+  el.querySelectorAll('td.jira-cell').forEach(function(td, i) {
+    const key = rows[i].key || '(Unlinked)';
+    const btn = document.createElement('button');
+    btn.className = 'jira';
+    btn.textContent = key;
+    btn.onclick = function() { window.openJiraModal(key); };
+    td.appendChild(btn);
+  });
+}
+
+// ── Aggregation helpers ────────────────────────────────────────────────────────
+function aggregateByField(rows, field) {
+  const map = {};
+  rows.forEach(r => {
+    const key = r[field] || '(Unknown)';
+    if (!map[key]) map[key] = { name: key, totalHrs: 0, orphanHrs: 0 };
+    const h = hrs(r);
+    map[key].totalHrs  += h;
+    if (isOrphaned(r)) map[key].orphanHrs += h;
+  });
+  return Object.values(map).map(v => ({
+    ...v,
+    orphanPct: v.totalHrs > 0 ? v.orphanHrs / v.totalHrs : 0
+  }));
+}
+
+function aggregateByFn(rows, keyFn) {
+  const map = {};
+  rows.forEach(r => {
+    const key  = keyFn(r) || '(Unlinked)';
+    map[key] = (map[key] || 0) + hrs(r);
+  });
+  return map;
+}
+
+// ── Key extraction ─────────────────────────────────────────────────────────────
+function programKey(row) {
+  const candidates = ['Program Mapping','Program Key','Program Name'];
+  for (const c of candidates) {
+    if (row[c] && row[c].trim()) return row[c].trim();
+  }
+  const mapping = (row['Roadmap Mapping'] || '').trim();
+  if (!mapping) return '(Unlinked)';
+  const match = mapping.match(/^([A-Z][A-Z0-9]+)-/);
+  return match ? match[1] : mapping;
+}
+
+function epicKey(row) {
+  const candidates = ['Epic Mapping','Epic Key','Epic Link','Epic'];
+  for (const c of candidates) {
+    if (row[c] && row[c].trim()) return row[c].trim();
+  }
+  return (row['Roadmap Mapping'] || '').trim() || '(Unlinked)';
+}
+
+// ── Confetti ───────────────────────────────────────────────────────────────────
+let confettiActive = false;
+function launchConfetti() {
+  if (confettiActive) return;
+  confettiActive = true;
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = Array.from({length:120}, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 100,
+    vx: (Math.random() - .5) * 3,
+    vy: 2 + Math.random() * 3,
+    size: 5 + Math.random() * 7,
+    rotation: Math.random() * 360,
+    rotV: (Math.random() - .5) * 8,
+    color: ['#1fe3a5','#2d6bff','#ffcc66','#8b5cf6','#ff6b6b','#ec4899'][Math.floor(Math.random()*6)],
+    shape: Math.random() < .5 ? 'rect' : 'circle',
+    alpha: 1
+  }));
+
+  let frame = 0;
+  (function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += .05;
+      p.rotation += p.rotV;
+      if (frame > 120) p.alpha -= .015;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      if (p.shape === 'rect') ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+      else { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 180 && particles.some(p => p.alpha > 0)) requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); confettiActive = false; }
+  })();
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function hrs(row) {
+  return parseFloat(row['Worklog Hours']) || 0;
+}
+function fmt(n) {
+  return n.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:1});
+}
+function fmtPct(p) {
+  return (p * 100).toFixed(1) + '%';
+}
+function pctColor(p) {
+  if (p < .05)  return 'var(--good)';
+  if (p < .15)  return 'var(--warn)';
+  return 'var(--bad)';
+}
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ── Modals ─────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id + 'Modal').style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id + 'Modal').style.display = 'none';
+}
+function closeModalOnOverlay(e, id) {
+  if (e.target === e.currentTarget) closeModal(id);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['caveats','trend','jira'].forEach(id => closeModal(id));
+  }
+});
+
+// ── Jira modal ─────────────────────────────────────────────────────────────────
+window.openJiraModal = function(key) {
+  document.getElementById('jiraModalKey').textContent = key;
+  openModal('jira');
+};
+
+
+// ── Trend modal ────────────────────────────────────────────────────────────────
+let trendDataLoaded = false;
+
+function openTrendModal() {
+  openModal('trend');
+  if (trendDataLoaded) return;
+  Papa.parse(HIST_CSV, {
+    download: true, header: true,
+    complete: r => {
+      trendDataLoaded = true;
+      renderTrendModal((r.data || []).filter(row => row['Quarter'] && row['Quarter'].trim()));
+    },
+    error: () => {
+      document.getElementById('trendModalBody').innerHTML =
+        '<div style="color:var(--bad);text-align:center;padding:24px;font-size:13px;">Failed to load historical data.</div>';
+    }
+  });
+}
+
+function renderTrendModal(rows) {
+  if (!rows || !rows.length) {
+    document.getElementById('trendModalBody').innerHTML =
+      '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No historical data found. Run <strong>seedHistoricalOrphans()</strong> in the Script Editor to populate the Historical_Orphans tab.</div>';
+    return;
+  }
+
+  const svgW = 540, svgH = 190;
+  const padL = 38, padR = 12, padT = 18, padB = 38;
+  const chartW = svgW - padL - padR;
+  const chartH = svgH - padT - padB;
+
+  const pcts = rows.map(d => parseFloat(d['Orphan %']) * 100);
+  const maxPct = Math.max(...pcts, 20);
+  const n = rows.length;
+  const gap = chartW / n;
+  const barW = gap * 0.6;
+
+  const thresh5Y = padT + chartH - (5 / maxPct) * chartH;
+
+  let bars = '', labels = '', yAxis = '';
+
+  // Y axis gridlines
+  [0, 5, 10, 15, 20].filter(v => v <= maxPct + 1).forEach(v => {
+    const ty = padT + chartH - (v / maxPct) * chartH;
+    yAxis += `<line x1="${padL}" y1="${ty.toFixed(1)}" x2="${svgW - padR}" y2="${ty.toFixed(1)}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    yAxis += `<text x="${padL - 5}" y="${(ty + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="#6b78a0">${v}%</text>`;
+  });
+
+  rows.forEach((d, i) => {
+    const pct   = pcts[i];
+    const x     = padL + gap * i + (gap - barW) / 2;
+    const barH  = Math.max((pct / maxPct) * chartH, 2);
+    const y     = padT + chartH - barH;
+    const color = pct < 5 ? '#1fe3a5' : pct < 15 ? '#ffcc66' : '#ff6b6b';
+    const lx    = padL + gap * i + gap / 2;
+
+    bars   += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" rx="3" opacity="0.82"/>`;
+    bars   += `<text x="${(x + barW/2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="${color}" font-weight="700">${pct.toFixed(1)}%</text>`;
+    labels += `<text x="${lx.toFixed(1)}" y="${(svgH - 10).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="#6b78a0">${d['Quarter']}</text>`;
+  });
+
+  const svgHtml = `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;display:block;">
+    ${yAxis}
+    ${bars}
+    <line x1="${padL}" y1="${thresh5Y.toFixed(1)}" x2="${svgW - padR}" y2="${thresh5Y.toFixed(1)}"
+          stroke="rgba(31,227,165,0.55)" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="${(svgW - padR - 3).toFixed(1)}" y="${(thresh5Y - 5).toFixed(1)}" text-anchor="end"
+          font-size="9" fill="rgba(31,227,165,0.75)">5% goal</text>
+    ${labels}
+  </svg>`;
+
+  let tableRows = '';
+  rows.forEach(d => {
+    const pct   = parseFloat(d['Orphan %']) * 100;
+    const color = pct < 5 ? 'var(--good)' : pct < 15 ? 'var(--warn)' : 'var(--bad)';
+    const totalH  = parseFloat(d['Total Hours'])  || 0;
+    const orphanH = parseFloat(d['Orphan Hours']) || 0;
+    tableRows += `<tr>
+      <td>${esc(d['Quarter'])}</td>
+      <td class="num">${fmt(totalH)}</td>
+      <td class="num">${fmt(orphanH)}</td>
+      <td class="num" style="color:${color};font-weight:800;">${pct.toFixed(1)}%</td>
+    </tr>`;
+  });
+
+  document.getElementById('trendModalBody').innerHTML = `
+    <div class="trend-svg-wrap">${svgHtml}</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:8px;">
+      Source: <em>Historical_Orphans</em> tab — manually maintained Q-o-Q snapshot
+    </div>
+    <table class="trend-table">
+      <thead><tr>
+        <th>Quarter</th><th class="num">Total Hrs</th><th class="num">Orphan Hrs</th><th class="num">Orphan %</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</body>
+</html>
