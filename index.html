@@ -439,6 +439,9 @@
 </head>
 <body>
 
+<!-- ── Temporary debug banner (remove once orphan % is fixed) ──────────────── -->
+<div id="debugBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#ffd700;font-size:12px;padding:6px 12px;border-top:2px solid #ffd700;word-break:break-all;"></div>
+
 <!-- ── Loading screen ───────────────────────────────────────────────────────── -->
 <div id="loading" class="loading">
   <div class="loading-bg">
@@ -758,18 +761,39 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       allActuals = (actualsResult.data || []).filter(r => r['Resource Name'] && r['Resource Name'].trim());
 
-      const firstInitRow = (initResult.data || []).find(r => Object.keys(r).length > 0);
-      const fields = firstInitRow ? Object.keys(firstInitRow) : (initResult.meta.fields || []);
-      const jiraField = fields.find(h => {
+      // Use meta.fields (PapaParse's parsed header list) — more reliable than Object.keys of a data row
+      const rawFields = initResult.meta && initResult.meta.fields ? initResult.meta.fields : [];
+      const jiraField = rawFields.find(h => {
         const clean = h.replace(/^\uFEFF/,'').trim();
-        return /jira\s*key/i.test(clean) || clean.toLowerCase() === 'key';
-      }) || fields[0];
+        return /jira\s*key/i.test(clean);
+      }) || rawFields.find(h => {
+        const clean = h.replace(/^\uFEFF/,'').trim().toLowerCase();
+        return clean === 'key' || clean.includes('jira') || clean.includes('initiative key');
+      }) || rawFields[0];
+
       const initiativeKeys = [];
       (initResult.data || []).forEach(row => {
-        const key = (row[jiraField] || '').trim();
+        // Try the detected field first, then scan all fields for JIRA-looking values
+        let key = jiraField ? (row[jiraField] || '').trim() : '';
+        if (!key) {
+          // fallback: scan row for a value matching JIRA key pattern
+          for (const f of rawFields) {
+            const v = (row[f] || '').trim();
+            if (/^[A-Z][A-Z0-9]+-\d+$/.test(v)) { key = v; break; }
+          }
+        }
         if (key) initiativeKeys.push(key);
       });
       initKeySet = new Set(initiativeKeys);
+
+      // Visible debug banner (remove after confirmed working)
+      const dbg = document.getElementById('debugBanner');
+      if (dbg) {
+        const sampleKeys = [...initKeySet].slice(0, 3);
+        const sampleMaps = allActuals.slice(0, 3).map(r => r['Roadmap Mapping'] || '(empty)');
+        dbg.innerHTML = `<b>Debug:</b> jiraField=<code>${jiraField}</code> | initKeySet.size=<b>${initKeySet.size}</b> | sampleKeys=${JSON.stringify(sampleKeys)} | sampleRoadmapMapping=${JSON.stringify(sampleMaps)}`;
+        dbg.style.display = 'block';
+      }
 
       document.getElementById('loadingStep').textContent = 'Building leaderboard…';
       document.getElementById('rowsScannedPill').textContent = allActuals.length.toLocaleString();
