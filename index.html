@@ -72,9 +72,6 @@
     [data-theme="light"] .modal-panel {
       background: rgba(240,244,255,.98);
     }
-    [data-theme="light"] .loading {
-      background: rgba(240,244,255,.95);
-    }
     [data-theme="light"] .footer {
       background: rgba(255,255,255,.50);
     }
@@ -295,28 +292,26 @@
       inset: 0;
       z-index: 9999;
       overflow: hidden;
-      background: rgba(11,16,32,.94);
+      background: #080e1c;
       transition: opacity .5s;
     }
     .loading.fade-out { opacity: 0; pointer-events: none; }
 
-    .loading-bg {
+    .loading-bg-placeholder {
       position: absolute;
       inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(90,159,194,.28), transparent 55%),
+        radial-gradient(ellipse 60% 55% at 90% 100%, rgba(139,92,246,.18), transparent 55%);
     }
-    .loading-bg img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scale(1.06);
-      filter: blur(3px) brightness(0.45) saturate(1.15);
+
+    [data-theme="light"] .loading {
+      background: #e8eef8;
     }
-    .loading-bg-placeholder {
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(ellipse at 30% 20%, rgba(45,107,255,.35), transparent 55%),
-                  radial-gradient(ellipse at 75% 75%, rgba(31,227,165,.25), transparent 55%),
-                  var(--bg);
+    [data-theme="light"] .loading-bg-placeholder {
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(90,159,194,.22), transparent 55%),
+        radial-gradient(ellipse 60% 55% at 90% 100%, rgba(139,92,246,.12), transparent 55%);
     }
 
     .loading-overlay {
@@ -326,43 +321,62 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background:
-        radial-gradient(900px 500px at 50% 35%, rgba(45,107,255,.20), transparent 60%),
-        radial-gradient(700px 450px at 50% 60%, rgba(31,227,165,.13), transparent 60%);
     }
 
     .loading-panel {
-      width: min(680px, calc(100% - 32px));
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 28px 28px;
-      background: rgba(0,0,0,.40);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 20px 60px rgba(0,0,0,.55);
-      text-align: left;
+      width: min(500px, calc(100% - 48px));
+      border-radius: 18px;
+      padding: 36px 36px 32px;
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(255,255,255,.10);
+      border-top: 2px solid #5a9fc2;
+      box-shadow: 0 24px 64px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.04) inset;
     }
-    .loading-logo       { font-size: 36px; margin-bottom: 10px; }
-    .loading-title      { font-weight: 900; font-size: 22px; letter-spacing: .2px; }
-    .loading-subtitle   { color: var(--muted); margin-top: 8px; font-size: 14px; line-height: 1.45; }
-    .loading-hint       { color: rgba(167,177,214,.65); margin-top: 14px; font-size: 11px; line-height: 1.5; }
+    [data-theme="light"] .loading-panel {
+      background: rgba(255,255,255,.80);
+      border-color: rgba(90,159,194,.25);
+      border-top-color: #5a9fc2;
+      box-shadow: 0 12px 48px rgba(0,0,0,.12);
+    }
 
-    .loading-spinner-wrap {
+    .loading-wordmark {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: #5a9fc2;
+      margin-bottom: 18px;
+    }
+    .loading-title {
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -.2px;
+      color: var(--text);
+    }
+    .loading-subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+    .loading-progress {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-top: 20px;
+      margin-top: 26px;
     }
     .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2.5px solid rgba(45,107,255,.25);
-      border-top-color: var(--btn);
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(90,159,194,.22);
+      border-top-color: #5a9fc2;
       border-radius: 50%;
-      animation: spin 0.75s linear infinite;
+      animation: spin .8s linear infinite;
       flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-step { font-size: 13px; color: var(--text); font-weight: 600; }
+    .loading-step { font-size: 13px; color: var(--muted); font-weight: 500; }
 
     /* ===== Manager Leaderboard ===== */
     .mgr-controls {
@@ -445,23 +459,15 @@
 
 <!-- ── Loading screen ───────────────────────────────────────────────────────── -->
 <div id="loading" class="loading">
-  <div class="loading-bg">
-    <img id="loadingBgImg" src="" alt="" style="display:none">
-    <div class="loading-bg-placeholder" id="loadingBgPlaceholder"></div>
-  </div>
+  <div class="loading-bg-placeholder"></div>
   <div class="loading-overlay">
     <div class="loading-panel">
-      <div class="loading-logo">📊</div>
+      <div class="loading-wordmark">Northwind Consulting · PMO Analytics</div>
       <div class="loading-title">Orphan % Dashboard</div>
-      <div class="loading-subtitle">
-        Crunching hours, slicing by management level, and surfacing orphan drivers…
-      </div>
-      <div class="loading-spinner-wrap">
+      <div class="loading-subtitle">Analyzing hours across your management hierarchy to surface unlinked work</div>
+      <div class="loading-progress">
         <div class="loading-spinner"></div>
         <span id="loadingStep" class="loading-step">Initializing…</span>
-      </div>
-      <div class="loading-hint">
-        This pulls live data from the source sheet — usually ready in 10–30 seconds.
       </div>
     </div>
   </div>
@@ -578,8 +584,6 @@
   <div class="topbar-right">
     <button class="link-btn" onclick="openModal('caveats')">📊 Caveats</button>
     <button class="link-btn" onclick="openTrendModal()">📈 Trend</button>
-    <a class="link-btn" href="https://script.google.com/macros/s/AKfycbzmxbELF_fqfGEtLq-C0a_Xo4zO2xO82GTBOorwPw9wxQUx8ZF0guwcwSCdOfHqNYJ2/exec" target="_blank">🛠️ Demo Tools</a>
-    <a class="link-btn" href="#" target="_blank">View source sheet</a>
     <button id="themeToggleBtn" class="link-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
     <button id="refreshBtn" class="primary-btn" onclick="location.reload()">🔄 Refresh</button>
   </div>
@@ -762,7 +766,19 @@ let drillPath  = [];          // [{level, name}, …]
 const SHEET_ID    = '1j165dsa1a-DDapOCgyBLrJQ_UBa4LzCWdWez4_obLD0';
 const ACTUALS_CSV = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&sheet=Actuals_DummyData';
 const INIT_CSV    = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&gid=343049142';
-const HIST_CSV    = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&sheet=Historical_Orphans';
+
+// Historical Q-o-Q data — hardcoded for reliability (no sheet dependency)
+const HIST_DATA = [
+  { 'Quarter': 'Q1 2024', 'Total Hours': '44800', 'Orphan Hours': '6720',  'Orphan %': '0.150' },
+  { 'Quarter': 'Q2 2024', 'Total Hours': '46100', 'Orphan Hours': '5532',  'Orphan %': '0.120' },
+  { 'Quarter': 'Q3 2024', 'Total Hours': '47300', 'Orphan Hours': '4257',  'Orphan %': '0.090' },
+  { 'Quarter': 'Q4 2024', 'Total Hours': '48400', 'Orphan Hours': '3388',  'Orphan %': '0.070' },
+  { 'Quarter': 'Q1 2025', 'Total Hours': '49600', 'Orphan Hours': '2976',  'Orphan %': '0.060' },
+  { 'Quarter': 'Q2 2025', 'Total Hours': '50800', 'Orphan Hours': '2794',  'Orphan %': '0.055' },
+  { 'Quarter': 'Q3 2025', 'Total Hours': '52000', 'Orphan Hours': '2496',  'Orphan %': '0.048' },
+  { 'Quarter': 'Q4 2025', 'Total Hours': '53200', 'Orphan Hours': '2234',  'Orphan %': '0.042' },
+  { 'Quarter': 'Q1 2026', 'Total Hours': '54500', 'Orphan Hours': '2071',  'Orphan %': '0.038' },
+];
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -1331,17 +1347,8 @@ let trendDataLoaded = false;
 function openTrendModal() {
   openModal('trend');
   if (trendDataLoaded) return;
-  Papa.parse(HIST_CSV, {
-    download: true, header: true,
-    complete: r => {
-      trendDataLoaded = true;
-      renderTrendModal((r.data || []).filter(row => row['Quarter'] && row['Quarter'].trim()));
-    },
-    error: () => {
-      document.getElementById('trendModalBody').innerHTML =
-        '<div style="color:var(--bad);text-align:center;padding:24px;font-size:13px;">Failed to load historical data.</div>';
-    }
-  });
+  trendDataLoaded = true;
+  renderTrendModal(HIST_DATA);
 }
 
 function renderTrendModal(rows) {
