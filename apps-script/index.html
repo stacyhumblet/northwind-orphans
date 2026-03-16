@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Orphan % Dashboard</title>
   <style>
     /* Prevent flash before theme is applied */
-    html { background: #000; }
-    html[data-theme="light"] { background: #f5f7ff; }
+    html { background: #f5f7ff; }
+    html[data-theme="dark"] { background: #000; }
 
     :root {
       --bg:   #0b1020;
@@ -576,7 +576,7 @@
     <button class="link-btn" onclick="openTrendModal()">📈 Trend</button>
     <a class="link-btn" href="https://script.google.com/macros/s/AKfycbzmxbELF_fqfGEtLq-C0a_Xo4zO2xO82GTBOorwPw9wxQUx8ZF0guwcwSCdOfHqNYJ2/exec" target="_blank">🛠️ Demo Tools</a>
     <a class="link-btn" href="#" target="_blank">View source sheet</a>
-    <button id="themeToggleBtn" class="link-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+    <button id="themeToggleBtn" class="link-btn" onclick="toggleTheme()" title="Toggle light/dark mode">☾ Dark</button>
     <button id="refreshBtn" class="primary-btn" onclick="location.reload()">🔄 Refresh</button>
   </div>
 </header>
@@ -721,6 +721,23 @@
 </footer>
 
 <script>
+// ── Theme ──────────────────────────────────────────────────────────────────────
+(function initTheme() {
+  const saved = localStorage.getItem('orphan_theme') || 'light';
+  setTheme(saved);
+})();
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = t === 'dark' ? '☀ Light' : '☾ Dark';
+  localStorage.setItem('orphan_theme', t);
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MONTHS_ABBR  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DRILL_LEVELS = ['Level 4 Mgr','Level 5 Mgr','Level 6 Mgr','Direct Manager'];
