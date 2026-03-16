@@ -7,30 +7,30 @@
   <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('orphan_theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}</script>
   <style>
     /* Prevent flash before theme is applied */
-    html { background: #000; }
-    html[data-theme="light"] { background: #f5f7ff; }
+    html { background: #080e1c; }
+    html[data-theme="light"] { background: #f0f4ff; }
 
     :root {
-      --bg:   #0b1020;
+      --bg:   #080e1c;
       --text: #e7ecff;
       --muted:#a7b1d6;
       --line: rgba(255,255,255,.08);
-      --btn:  #2d6bff;
-      --btn2: #224fc2;
-      --good: #1fe3a5;
-      --warn: #ffcc66;
-      --bad:  #ff6b6b;
+      --btn:  #5a9fc2;
+      --btn2: #3d7fa0;
+      --good: #10b981;
+      --warn: #f59e0b;
+      --bad:  #ef4444;
     }
     [data-theme="light"] {
       --bg:   #f0f4ff;
       --text: #1a2142;
       --muted:#5c6690;
       --line: rgba(0,0,0,.10);
-      --btn:  #2d6bff;
-      --btn2: #224fc2;
-      --good: #0ba676;
-      --warn: #b87d00;
-      --bad:  #d93636;
+      --btn:  #1a7aaa;
+      --btn2: #0f5a80;
+      --good: #059669;
+      --warn: #d97706;
+      --bad:  #dc2626;
     }
 
     * { box-sizing: border-box; }
@@ -39,16 +39,16 @@
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
                    "Apple Color Emoji", "Segoe UI Emoji";
       background:
-        radial-gradient(1200px 700px at 20% 0%,  rgba(45,107,255,.22), transparent 60%),
-        radial-gradient(900px  600px at 80% 10%, rgba(31,227,165,.15), transparent 60%),
+        radial-gradient(1200px 700px at 20% 0%,  rgba(90,159,194,.22), transparent 60%),
+        radial-gradient(900px  600px at 80% 10%, rgba(139,92,246,.15), transparent 60%),
         var(--bg);
       color: var(--text);
       min-height: 100vh;
     }
     [data-theme="light"] body, html[data-theme="light"] body {
       background:
-        radial-gradient(1200px 700px at 20% 0%,  rgba(45,107,255,.09), transparent 60%),
-        radial-gradient(900px  600px at 80% 10%, rgba(31,227,165,.07), transparent 60%),
+        radial-gradient(1200px 700px at 20% 0%,  rgba(90,159,194,.09), transparent 60%),
+        radial-gradient(900px  600px at 80% 10%, rgba(139,92,246,.07), transparent 60%),
         var(--bg);
     }
     [data-theme="light"] .topbar {
@@ -725,6 +725,22 @@
 </footer>
 
 <script>
+// ── Theme ──────────────────────────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
+  try { localStorage.setItem('orphan_theme', t); } catch(e) {}
+}
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme') || 'light';
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+}
+(function initTheme() {
+  var saved = localStorage.getItem('orphan_theme') || 'light';
+  setTheme(saved);
+})();
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MONTHS_ABBR  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DRILL_LEVELS = ['Level 4 Mgr','Level 5 Mgr','Level 6 Mgr','Direct Manager'];
